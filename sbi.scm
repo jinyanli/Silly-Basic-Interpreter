@@ -11,7 +11,7 @@
 ;;    The file mentioned in argv[1] is read and assumed to be an
 ;;    SBIR program, which is the executed.  Currently it is only
 ;;    printed.
-;;
+;;https://stackoverflow.com/questions/12658406/how-do-i-handle-an-unspecified-number-of-parameters-in-scheme
 
 (define *stderr* (current-error-port))
 
@@ -78,10 +78,16 @@
      ))
 ;;;
 
+;;get the length of a list
+(define len (lambda (l)
+         (define len.. (lambda (l.. n)
+             (if (null? l..)n
+               (len.. (cdr l..) (+ n 1)))))        
+         (len.. l 0)))
 
-;do arithmetic
+;do arithmetic (doesn't work)
 (define  (func-traverse tok)
-    (define (funcc-trav list op arg1 arg2)
+    (define (funcc-trav3 list op arg1 arg2)
        (if  (or (number? arg1) (number? arg2))  
             ( (function-get op) arg1 arg2 )
             (begin
@@ -90,16 +96,38 @@
             )
        ) 
     ) 
-    (funcc-trav tok (car  tok) (cadr tok) (caddr tok))
+     (define (funcc-trav2 list op arg1 )
+       (if  (number? arg1)  
+            ( (function-get op) arg1  )
+            (begin
+             (func-traverse (cadr list))
+            )
+       ) 
+    )
+    (if (pair? tok)  
+      (if (> 3 (len tok))
+         (funcc-trav2 tok (car  tok) (cadr tok))
+         (funcc-trav3 tok (car  tok) (cadr tok) (caddr tok))
+      )
+      (function-get tok)
+    )
 )
 
+;do arithmetic
+(define (value l)
+
+      (if (pair? l) 
+       (apply (function-get (car l)) (map value (cdr l)))      
+       l
+      )
+)
 ;implement print statement
 (define (print-traverse tok)
    (if (not (null?  tok) )
      (begin
           (if (string? (car tok))  
             (display (car tok))
-            (display (func-traverse (car tok))); change to func-traverse
+            (display (value (car tok))); change to func-traverse
           )
           (print-traverse (cdr tok))
       )

@@ -71,7 +71,7 @@
        
      ))
 
-;;;
+;;
 
 ;;get the length of a list
 (define len (lambda (l)
@@ -91,6 +91,9 @@
        )    
       )
 )
+;implement if statement
+
+
 
 ;implement print statement
 (define (print-traverse tok)
@@ -107,26 +110,23 @@
 )
 ;implement let statement
 (define (letfunc arg)
-;  (display (car arg))
- 
-;   (display (cadr arg))
 ;   (newline)
   (if (pair? (car arg))
     (begin
 ;      (display "yyyyyyy")(newline)
-;      (display (caar arg))(newline)
-;      (display (variable-get (caar arg)))(newline)
+
       (vector-set! (variable-get
                        (caar arg)) (value (cadar arg)) (cadr arg))
 ;       (display "zzzzzzzzzz")(newline)
-;       (display (variable-get (caar arg)))(newline)
-;       (display ((function-get (caar arg)) 6))(newline)
+ ;      (display (variable-get (caar arg)))(newline)
 ;       (display "xxxxx")(newline)
-
     )
     (begin
-     (variable-put! (car arg) (value (cadr arg)) )  
-
+     (let ((result (value (cadr arg))))
+       (variable-put! (car arg) result)
+;       (display (car arg))(display " ")(display (variable-get (car arg)))(newline)  
+     )
+    
     )
   )
 )
@@ -183,19 +183,31 @@
         (let     ,letfunc)
         (dim     ,dimfunc)
         (goto    ,gotofunc)
+        (if      ,(void))
+        (<=      ,(lambda (x y) (<= x y)))
+        (>=      ,(lambda (x y) (>= x y)))
+        (<      ,(lambda (x y) (< x y)))
+        (>      ,(lambda (x y) (> x y)))
+        (=      ,(lambda (x y) (equal? x y)))
+        (<>      ,(lambda (x y) (not (equal? x y))))
      ))
 
 ;parse statements
 (define (func functok program line-nr)
   ;(display (car functok))(display (cdr functok))
   (when (not (hash-has-key? *function-table* (car functok )))
-        (die "~s statement doesn't exit" (car functok)))
+        (display (car functok))(display " doesn't exit")(newline))
   (cond
     ((eqv? (car functok) 'goto)
 ;      (display (cadr functok))(display " ")
 ;      (display (lable-get (cadr functok)))(newline)
       (eval-line program (- (lable-get (cadr functok)) 1))
-    ) 
+    )
+    ((eqv? (car functok) 'if)
+      (when (equal? #t (value (cadr functok)))
+         (eval-line program (- (lable-get (caddr functok)) 1))
+      )
+    )  
     (else 
       ((function-get (car functok)) (cdr functok))
       (eval-line program (+ line-nr 1))

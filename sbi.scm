@@ -146,7 +146,7 @@
 ;   (newline)
   (variable-put! (caar arg) (make-vector (value (cadar arg))) )
 ;  (display (variable-get (caar arg)))(newline)
-  (function-put! (caar arg)
+  (function-put! (caar arg) 
       (lambda(x) (vector-ref (variable-get (caar arg)) (- x 1)))))
 
 
@@ -166,10 +166,11 @@
         (let ((object (read)))
 ;(display (value (car arg)))(display "debug")(newline)
              (cond [(eof-object? object)(variable-put! 'inputcount -1)]
-                   [(number? object) (variable-put! (car arg) object)]
+                   [(number? object)(variable-put! (car arg) object)
+                  (variable-put! 'inputcount (+ (variable-get 'inputcount) 1))]
                    [else (begin (printf "invalid number: ~a~n" object)
                                 )] )) 
-         (variable-put! 'inputcount (+ (variable-get 'inputcount) 1))
+         
          (when (not (null? (cdr arg)))
      (get-input (cdr arg)))
    )
@@ -235,6 +236,8 @@
       (exe-lines program (- (lable-get (cadr functok)) 1))
     )
     ((eqv? (car functok) 'if)
+;(display "if statement")(newline) 
+;(display (variable-get 'inputcount))(newline)
 ;     (display (value (cadr functok)))(newline)
       (if (equal? #t (value (cadr functok)))
         (exe-lines program (- (lable-get (caddr functok)) 1))

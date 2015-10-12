@@ -89,7 +89,6 @@
      ))
 
 ;;function "len" input: list output: the length of a list
-
 (define len (lambda (l)
          (define len.. (lambda (l.. n)
              (if (null? l..)n
@@ -100,23 +99,22 @@
 ;expression 
 ;RECURSIVE
 (define (value l)
-
-      (if (pair? l) 
-       (apply (function-get (car l)) (map value (cdr l)))      
-       (cond ((number? l) l)  
-             
-             (else (variable-get l)))))
+  (if (pair? l);base case
+    (apply (function-get (car l)) (map value (cdr l)))
+     ;recursive call     
+      (cond ((number? l) l)               
+          (else (variable-get l)))))
 
 ;function "print-traverse" input "string|expr" output:display
 ;RECURSIVE
 (define (print-traverse tok) 
-   (if (not (null?  tok) )
+   (if (not (null?  tok) );base case
      (begin
           (if (string? (car tok))  
             (display (car tok))
             (display (value (car tok)))      
           )         
-          (print-traverse (cdr tok))
+          (print-traverse (cdr tok));recursive call
       )
          (newline)))
 
@@ -127,8 +125,8 @@
   (if (pair? (car arg))
     (begin
 ;      (display "yyyyyyy")(newline)
-      (vector-set! (variable-get
-                (caar arg)) (- (value (cadar arg)) 1) (value (cadr arg)))
+     (vector-set! (variable-get
+        (caar arg)) (- (value (cadar arg)) 1) (value (cadr arg)))
 ;       (display "zzzzzzzzzz")(newline)
 ;       (display (variable-get (caar arg)))(newline)
 ;       (display "xxxxx")(newline)
@@ -141,9 +139,9 @@
 ;function "dimfunc" input (Varivale Expression)
 ;it create an array of given size
 (define (dimfunc arg)
-;  (display (caar arg))
-;   (display (cdar arg))
-;   (newline)
+;(display (caar arg))
+;(display (cdar arg))
+;(newline)
   (variable-put! (caar arg) (make-vector (value (cadar arg))) )
 ;  (display (variable-get (caar arg)))(newline)
   (function-put! (caar arg) 
@@ -156,23 +154,23 @@
    (exe-lines program (lable-get (car lable))))
 
 ;function "inputfunc" implement "input" statement
-;input: variable or array    RECURSIVE
+;input: variable or array   
+;RECURSIVE
 (define (inputfunc arg)
   (variable-put! 'inputcount 0)
   (define (get-input arg)
 ;(display (car arg))(newline)
-     (when (not (null? (car arg)))
+     (when (not (null? (car arg)));base case
         (variable-put! (car arg) (void))
         (let ((object (read)))
 ;(display (value (car arg)))(display "debug")(newline)
-             (cond [(eof-object? object)(variable-put! 'inputcount -1)]
-                   [(number? object)(variable-put! (car arg) object)
-                  (variable-put! 'inputcount (+ (variable-get 'inputcount) 1))]
-                   [else (begin (printf "invalid number: ~a~n" object)
+      (cond [(eof-object? object)(variable-put! 'inputcount -1)]
+       [(number? object)(variable-put! (car arg) object)
+        (variable-put! 'inputcount (+ (variable-get 'inputcount) 1))]
+          [else (begin (printf "invalid number: ~a~n" object)
                                 )] )) 
-         
          (when (not (null? (cdr arg)))
-     (get-input (cdr arg)))
+     (get-input (cdr arg)));recursive call
    )
 )
 (get-input arg)
@@ -180,11 +178,11 @@
 ;(display (variable-get (car arg)))(newline)
 )
 
+;initialize functions in the function table
 (for-each
     (lambda (pair)
             (function-put! (car pair) (cadr pair)))
     `(
-
         (log10_2 0.301029995663981195213738894724493026768189881)
         (sqrt_2  1.414213562373095048801688724209698078569671875)
         (/       ,(lambda (x y)  (/ x (if (equal? y 0) 0.0 y))))
@@ -201,14 +199,14 @@
         (floor   ,(lambda(x)(floor x)))
         (log     ,(lambda(x)(log (if (equal? x 0) 0.0 x))))
         (sqrt    ,(lambda(x)(sqrt x)))
-        (floor    ,(lambda(x)(floor x)))
-        (sin    ,(lambda(x)(sin x)))
-        (cos    ,(lambda(x)(cos x)))
-        (round    ,(lambda(x)(round x)))
-        (tan    ,(lambda(x)(tan x)))
+        (floor   ,(lambda(x)(floor x)))
+        (sin     ,(lambda(x)(sin x)))
+        (cos     ,(lambda(x)(cos x)))
+        (round   ,(lambda(x)(round x)))
+        (tan     ,(lambda(x)(tan x)))
         (acos    ,(lambda(x)(acos x)))
         (asin    ,(lambda(x)(asin x)))
-        (abs    ,(lambda(x)(abs x)))
+        (abs     ,(lambda(x)(abs x)))
         (atan    ,(lambda(x)(atan (if (equal? x 0) 0.0 x))))
         (print   ,print-traverse)
         (let     ,letfunc)
@@ -218,47 +216,54 @@
         (if      ,(void))
         (<=      ,(lambda (x y) (<= x y)))
         (>=      ,(lambda (x y) (>= x y)))
-        (<      ,(lambda (x y) (< x y)))
-        (>      ,(lambda (x y) (> x y)))
-        (=      ,(lambda (x y) (eqv? x y)))
+        (<       ,(lambda (x y) (< x y)))
+        (>       ,(lambda (x y) (> x y)))
+        (=       ,(lambda (x y) (eqv? x y)))
         (<>      ,(lambda (x y) (not (equal? x y))))
      ))
 
-;parse statements
+;function "func" parse statements
+;input the statements, whole program and line number
 (define (func functok program line-nr)
-;  (display (car functok))(display "  ")(display (cdr functok))(newline)
+;(display (car functok))(display "  ")(display (cdr functok))(newline)
+(if (null? functok)
+  (exe-lines program (+ line-nr 1))
+  (begin
   (when (not (hash-has-key? *function-table* (car functok )))
-        (display (car functok))(display " doesn't exit")(newline))
+        (display (car functok))(display " doesn't exit")(newline)
+         (usage-exit))
+
   (cond
     ((eqv? (car functok) 'goto)
-;      (display (cadr functok))(display " ")
-;      (display (lable-get (cadr functok)))(newline)
+;(display (cadr functok))(display " ")
+;(display (lable-get (cadr functok)))(newline)
       (exe-lines program (- (lable-get (cadr functok)) 1))
     )
     ((eqv? (car functok) 'if)
 ;(display "if statement")(newline) 
 ;(display (variable-get 'inputcount))(newline)
-;     (display (value (cadr functok)))(newline)
+;(display (value (cadr functok)))(newline)
       (if (equal? #t (value (cadr functok)))
         (exe-lines program (- (lable-get (caddr functok)) 1))
         (exe-lines program (+ line-nr 1))
       )
     )  
     (else
-;(display "XXXXXXXXXX")(newline) 
       ((function-get (car functok)) (cdr functok))
       (exe-lines program (+ line-nr 1))
-    )))
+    )))))
 
-
+;function "die" print error message and exit
 (define (die list)
     (for-each (lambda (item) (display item *stderr*)) list)
     (newline *stderr*)
     (exit 1))
 
+;function "usage-exit" print information and then die
 (define (usage-exit)
     (die `("Usage: " ,*run-file* " filename")))
 
+;fucntion "readlist-from-inputfile" read a file
 (define (readlist-from-inputfile filename)
     (let ((inputfile (open-input-file filename)))
          (if (not (input-port? inputfile))
@@ -267,7 +272,8 @@
                   (close-input-port inputfile)
                          program))))
 
-;function
+;function "write-program-by-line filename program" prints he original
+;program
 (define (write-program-by-line filename program)
     (printf "==================================================~n")
     (printf "~a: ~s~n" *run-file* filename)
@@ -277,11 +283,11 @@
     (printf ")~n")
     (printf "-----------------------End------------------------~n"))
 
-
-
-;;put lables and their statements into hash table
+;;function "et-all-lable" put lables and their
+;statements into hash table
+;input: list
 (define (get-all-lable list)
-(when (not (null? list))
+(when (not (null? list));base case
               (let ((first (caar list)))
                    (when (number? first)
                          (if (not (null? (cdar list)))
@@ -292,34 +298,37 @@
                                 ;(display (cadar list))(display " ")
                                 ))
                              (void))))
-              (get-all-lable (cdr list))))
+              (get-all-lable (cdr list))));recursive call
+
+;function "exe-lines" execute each line of the program
+;input the whole program and line number
 ;RECURSIVE
 (define (exe-lines program line-nr)
-        (when (> (len program) line-nr)
-;        (display "line number: ")(display line-nr)(newline)
-
+        (when (< line-nr (len program));base case
+       ;(display "line number: ")(display line-nr)(newline)
           (let ((line (list-ref program line-nr)))
-;               (display "line len ")(display (len line))(newline)
-;               (display line)(newline)
+               ;(display "line len ")(display (len line))(newline)
+               ;(display line)(newline)
              (cond
                ((= (len line) 3) 
                  ;(display "(cddr line)")(display (cddr line))(newline)
                  (set! line (cddr line))
-;                 (display "XXXXXXXXXXXXXXXXx")(newline)
+                 ;(display "-------------------")(newline)
                  ;(display "(car line)")(display (car line))(newline)
                  (func (car line) program line-nr)
                )
                ((and (= (len line) 2) (list? (cadr line)))
-                 ;(display "yyyyyyyyyyyy")(newline)
+               ;(display "+++++++++++++++++++")(newline)
                ;(display "(cdr line)")(display (cdr line))(newline)
                (set! line (cdr line))
                ;(display "(car line)")(display (car line))(newline)
                (func (car line) program line-nr)
-              )           
+               )           
                (else
-                  (exe-lines program (+ line-nr 1)))
+                  (exe-lines program (+ line-nr 1)));recursive call
              ))))
 
+;;this is the main function that calls other function
 (define (main arglist)
     (if (or (null? arglist) (not (null? (cdr arglist))))
         (usage-exit)
@@ -328,10 +337,10 @@
                 (program (readlist-from-inputfile sbprogfile))
               )
               (begin
-                 (write-program-by-line sbprogfile program)
+;                 (write-program-by-line sbprogfile program)
                  (get-all-lable program)
                  (exe-lines program 0)
               ))))
-
+;call main function
 (main (vector->list (current-command-line-arguments)))
 
